@@ -25,10 +25,8 @@ module "vote_service_sg" {
   source = "terraform-aws-modules/security-group/aws"
 
   name        = "Jenkis-SG"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = module.vpc.vpc_id       #fatching vpc id from vpc module
 
-  ingress_cidr_blocks      = ["10.10.0.0/16"]
-  ingress_rules            = ["https-443-tcp"]
   ingress_with_cidr_blocks = [
     {
       from_port   = 8080
@@ -63,3 +61,20 @@ module "vote_service_sg" {
 # EC2
 
 
+module "ec2_instance" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+
+  name = "jenkins-master"
+
+  instance_type          = var.instance_type
+  key_name               = "terra-key"
+  monitoring             = true
+  vpc_security_group_ids = module.vote_service_sg.security_group_id
+  subnet_id              = module.vpc.public_subnets[0]
+  associate_public_ip_address = true
+
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
